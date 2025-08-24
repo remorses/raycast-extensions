@@ -128,8 +128,8 @@
     }
   ],
   "dependencies": {
-    "@raycast/api": "^1.38.2",
-    "@raycast/utils": "^1.0.7",
+    "@raycast/api": "^1.102.5",
+    "@raycast/utils": "^2.2.1",
     "lodash": "^4.17.21",
     "stripe": "^17.3.1"
   },

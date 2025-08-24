@@ -19,9 +19,6 @@ import Stripe from "stripe";
 
 const { stripeTestApiKey, stripeLiveApiKey } = getPreferenceValues();
 
-// Constants
-const RESULTS_LIMIT = 10;
-
 // Create Stripe clients for both environments
 const stripeTest = stripeTestApiKey ? new Stripe(stripeTestApiKey, { apiVersion: "2024-10-28.acacia" }) : null;
 const stripeLive = stripeLiveApiKey ? new Stripe(stripeLiveApiKey, { apiVersion: "2024-10-28.acacia" }) : null;
@@ -33,11 +30,7 @@ function CustomerList() {
   const [searchQuery, setSearchQuery] = useState("");
   const { push } = useNavigation();
 
-  const {
-    isLoading,
-    data: allCustomers,
-    pagination,
-  } = useCachedPromise(
+  const { isLoading, data, pagination } = useCachedPromise(
     (query: string) => async (options: { page: number; cursor?: string }) => {
       if (!stripe) {
         throw new Error(`Stripe ${environment} API key is not configured`);
@@ -47,16 +40,16 @@ function CustomerList() {
       if (query && query.trim()) {
         // Remove mailto: prefix if present
         const cleanQuery = query.replace(/^mailto:/i, "").trim();
-        
+
         // If the query doesn't contain a colon, assume it's an email search
         let searchQuery = cleanQuery;
-        if (!cleanQuery.includes(':')) {
+        if (!cleanQuery.includes(":")) {
           searchQuery = `email~"${cleanQuery}"`;
         }
-        
+
         const searchParams: Stripe.CustomerSearchParams = {
           query: searchQuery,
-          limit: RESULTS_LIMIT,
+          limit: 25,
           expand: ["data.subscriptions"],
         };
 
@@ -75,7 +68,7 @@ function CustomerList() {
       } else {
         // Use list when no query
         const params: Stripe.CustomerListParams = {
-          limit: RESULTS_LIMIT,
+          limit: 25,
           expand: ["data.subscriptions"],
         };
 
@@ -96,6 +89,7 @@ function CustomerList() {
     [searchQuery],
     {
       keepPreviousData: true,
+
     }
   );
 
@@ -105,9 +99,8 @@ function CustomerList() {
       pagination={pagination}
       searchBarPlaceholder="Search by customer email..."
       onSearchTextChange={setSearchQuery}
-      throttle
     >
-      {allCustomers?.map((customer: Stripe.Customer) => {
+      {data?.map((customer: Stripe.Customer) => {
         const createdDate = convertTimestampToDate(customer.created);
         const subscriptions = customer.subscriptions as Stripe.ApiList<Stripe.Subscription> | undefined;
         const hasSubscriptions = subscriptions?.data && subscriptions.data.length > 0;
@@ -121,18 +114,26 @@ function CustomerList() {
             accessories={[
               {
                 date: new Date(customer.created * 1000),
-                tooltip: "Created"
+                tooltip: "Created",
               },
-              ...(hasSubscriptions ? [{
-                tag: {
-                  value: `${subscriptionCount} subscription${subscriptionCount > 1 ? 's' : ''}`,
-                  color: Color.Blue
-                }
-              }] : []),
-              ...(customer.currency ? [{
-                text: customer.currency.toUpperCase(),
-                tooltip: "Default Currency"
-              }] : []),
+              ...(hasSubscriptions
+                ? [
+                    {
+                      tag: {
+                        value: `${subscriptionCount} subscription${subscriptionCount > 1 ? "s" : ""}`,
+                        color: Color.Blue,
+                      },
+                    },
+                  ]
+                : []),
+              ...(customer.currency
+                ? [
+                    {
+                      text: customer.currency.toUpperCase(),
+                      tooltip: "Default Currency",
+                    },
+                  ]
+                : []),
             ]}
             actions={
               <ActionPanel>
