@@ -261,7 +261,7 @@ function SubscriptionList({ customerId }: SubscriptionListProps = {}) {
   };
 
   return (
-    <ListContainer isLoading={isLoading} pagination={pagination}>
+    <ListContainer searchBarPlaceholder="Search by subscription id..." isLoading={isLoading} pagination={pagination}>
       {allSubscriptions?.map((subscription: Stripe.Subscription) => {
         const customer = subscription.customer as Stripe.Customer;
         const price = subscription.items.data[0]?.price;
