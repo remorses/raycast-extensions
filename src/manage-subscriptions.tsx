@@ -57,13 +57,27 @@ const SubscriptionDetailBase = ({ subscription }: { subscription: Stripe.Subscri
 
 ## Pricing
 - **Amount**: ${currency} ${convertAmount(amount)} / ${interval}
-${price?.product ? `- **Product**: ${typeof price.product === "string" ? price.product : ('name' in price.product && price.product.name) || price.product.id}` : ""}
+${
+  price?.product
+    ? `- **Product**: ${
+        typeof price.product === "string"
+          ? price.product
+          : ("name" in price.product && price.product.name) || price.product.id
+      }`
+    : ""
+}
 
 ${subscription.trial_end ? `## Trial\n- **Trial Ends**: ${convertTimestampToDate(subscription.trial_end)}` : ""}
 
 ${subscription.cancel_at ? `## Cancellation\n- **Cancels At**: ${convertTimestampToDate(subscription.cancel_at)}` : ""}
 
-${subscription.metadata && Object.keys(subscription.metadata).length > 0 ? `## Metadata\n${Object.entries(subscription.metadata).map(([key, value]) => `- **${key}**: ${value}`).join("\n")}` : ""}
+${
+  subscription.metadata && Object.keys(subscription.metadata).length > 0
+    ? `## Metadata\n${Object.entries(subscription.metadata)
+        .map(([key, value]) => `- **${key}**: ${value}`)
+        .join("\n")}`
+    : ""
+}
 `;
 
   return (
@@ -71,11 +85,7 @@ ${subscription.metadata && Object.keys(subscription.metadata).length > 0 ? `## M
       markdown={markdown}
       actions={
         <ActionPanel>
-          <Action
-            title="Back to List"
-            icon={Icon.ArrowLeft}
-            onAction={pop}
-          />
+          <Action title="Back to List" icon={Icon.ArrowLeft} onAction={pop} />
           <Action.OpenInBrowser
             title="View in Stripe Dashboard"
             url={`${dashboardUrl}/subscriptions/${subscription.id}`}
@@ -251,10 +261,7 @@ function SubscriptionList({ customerId }: SubscriptionListProps = {}) {
   };
 
   return (
-    <ListContainer
-      isLoading={isLoading}
-      pagination={pagination}
-    >
+    <ListContainer isLoading={isLoading} pagination={pagination}>
       {allSubscriptions?.map((subscription: Stripe.Subscription) => {
         const customer = subscription.customer as Stripe.Customer;
         const price = subscription.items.data[0]?.price;
@@ -272,22 +279,30 @@ function SubscriptionList({ customerId }: SubscriptionListProps = {}) {
             accessories={[
               {
                 date: new Date(subscription.created * 1000),
-                tooltip: "Started"
+                tooltip: "Started",
               },
               {
                 tag: {
                   value: subscription.status.toUpperCase(),
                   color:
-                    subscription.status === "active" ? Color.Green :
-                    subscription.status === "canceled" ? Color.Red :
-                    subscription.status === "past_due" ? Color.Orange :
-                    subscription.status === "unpaid" ? Color.Red :
-                    subscription.status === "incomplete" ? Color.Yellow :
-                    subscription.status === "incomplete_expired" ? Color.Red :
-                    subscription.status === "trialing" ? Color.Blue :
-                    subscription.status === "paused" ? Color.SecondaryText :
-                    Color.SecondaryText
-                }
+                    subscription.status === "active"
+                      ? Color.Green
+                      : subscription.status === "canceled"
+                      ? Color.Red
+                      : subscription.status === "past_due"
+                      ? Color.Orange
+                      : subscription.status === "unpaid"
+                      ? Color.Red
+                      : subscription.status === "incomplete"
+                      ? Color.Yellow
+                      : subscription.status === "incomplete_expired"
+                      ? Color.Red
+                      : subscription.status === "trialing"
+                      ? Color.Blue
+                      : subscription.status === "paused"
+                      ? Color.SecondaryText
+                      : Color.SecondaryText,
+                },
               },
             ]}
             actions={
