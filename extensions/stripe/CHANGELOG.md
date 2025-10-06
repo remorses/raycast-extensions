@@ -6,7 +6,7 @@ Marked as Windows compatible.
 
 ## [Manage customers & subscriptions command] - 2025-09-09
 
-Adds a new command to manage customers and subscriptions
+Adds a new command to manage customers and subscriptions. Now search also by name.
 
 ## [Open in Stripe Dashboard] - 2025-05-05
 

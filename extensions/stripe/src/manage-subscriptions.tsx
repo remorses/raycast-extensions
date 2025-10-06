@@ -147,7 +147,7 @@ function SubscriptionList({ customerId }: SubscriptionListProps = {}) {
     [customerId],
     {
       keepPreviousData: true,
-    },
+    }
   );
 
   const handleCancelSubscription = async (subscription: Stripe.Subscription) => {
@@ -283,20 +283,20 @@ function SubscriptionList({ customerId }: SubscriptionListProps = {}) {
                     subscription.status === "active"
                       ? Color.Green
                       : subscription.status === "canceled"
-                        ? Color.Red
-                        : subscription.status === "past_due"
-                          ? Color.Orange
-                          : subscription.status === "unpaid"
-                            ? Color.Red
-                            : subscription.status === "incomplete"
-                              ? Color.Yellow
-                              : subscription.status === "incomplete_expired"
-                                ? Color.Red
-                                : subscription.status === "trialing"
-                                  ? Color.Blue
-                                  : subscription.status === "paused"
-                                    ? Color.SecondaryText
-                                    : Color.SecondaryText,
+                      ? Color.Red
+                      : subscription.status === "past_due"
+                      ? Color.Orange
+                      : subscription.status === "unpaid"
+                      ? Color.Red
+                      : subscription.status === "incomplete"
+                      ? Color.Yellow
+                      : subscription.status === "incomplete_expired"
+                      ? Color.Red
+                      : subscription.status === "trialing"
+                      ? Color.Blue
+                      : subscription.status === "paused"
+                      ? Color.SecondaryText
+                      : Color.SecondaryText,
                 },
               },
             ]}
