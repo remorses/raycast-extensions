@@ -4,9 +4,13 @@
 
 Marked as Windows compatible.
 
+## [Search by customer name] - {PR_MERGE_DATE}
+
+Now search also by name in Manage Customers & Subscriptions.
+
 ## [Manage customers & subscriptions command] - 2025-09-09
 
-Adds a new command to manage customers and subscriptions. Now search also by name.
+Adds a new command to manage customers and subscriptions.
 
 ## [Open in Stripe Dashboard] - 2025-05-05
 
