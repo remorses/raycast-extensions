@@ -1,6 +1,10 @@
 # Stripe Changelog
 
-## [Manage customers & subscriptions command] - {PR_MERGE_DATE}
+## [Windows Support] - 2025-10-03
+
+Marked as Windows compatible.
+
+## [Manage customers & subscriptions command] - 2025-09-09
 
 Adds a new command to manage customers and subscriptions
 
