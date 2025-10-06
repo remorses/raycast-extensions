@@ -31,10 +31,10 @@ function CustomerList() {
         // Remove mailto: prefix if present
         const cleanQuery = query.replace(/^mailto:/i, "").trim();
 
-        // If the query doesn't contain a colon, assume it's an email search
+        // If the query doesn't contain a colon, search both email and name
         let searchQuery = cleanQuery;
         if (!cleanQuery.includes(":")) {
-          searchQuery = `email~"${cleanQuery}"`;
+          searchQuery = `email~"${cleanQuery}" OR name~"${cleanQuery}"`;
         }
 
         const searchParams: Stripe.CustomerSearchParams = {
@@ -86,7 +86,7 @@ function CustomerList() {
     <ListContainer
       isLoading={isLoading}
       pagination={pagination}
-      searchBarPlaceholder="Search by customer email..."
+      searchBarPlaceholder="Search by email or name..."
       onSearchTextChange={setSearchQuery}
     >
       {data?.map((customer: Stripe.Customer) => {
