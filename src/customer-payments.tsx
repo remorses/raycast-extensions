@@ -38,7 +38,7 @@ function CustomerPaymentsList({ customerId }: CustomerPaymentsListProps) {
     [],
     {
       keepPreviousData: true,
-    },
+    }
   );
 
   const handleRefund = async (charge: Stripe.Charge) => {
@@ -56,7 +56,7 @@ function CustomerPaymentsList({ customerId }: CustomerPaymentsListProps) {
     const confirmed = await confirmAlert({
       title: "Refund Payment",
       message: `Are you sure you want to refund ${(remainingAmount / 100).toFixed(
-        2,
+        2
       )} ${charge.currency.toUpperCase()}?`,
       primaryAction: {
         title: "Refund",
