@@ -12,9 +12,11 @@ import {
   Detail,
   useNavigation,
 } from "@raycast/api";
-import { useCachedPromise } from "@raycast/utils";
+import React from "react";
+import { showFailureToast, useCachedPromise } from "@raycast/utils";
 import { withEnvContext, ListContainer } from "./components";
 import { useStripeDashboard, useEnvContext } from "./hooks";
+import { STRIPE_API_VERSION } from "./enums";
 import { convertAmount, convertTimestampToDate } from "./utils";
 import Stripe from "stripe";
 
@@ -24,8 +26,8 @@ const { stripeTestApiKey, stripeLiveApiKey } = getPreferenceValues();
 const RESULTS_LIMIT = 10;
 
 // Create Stripe clients for both environments
-const stripeTest = stripeTestApiKey ? new Stripe(stripeTestApiKey, { apiVersion: "2024-10-28.acacia" }) : null;
-const stripeLive = stripeLiveApiKey ? new Stripe(stripeLiveApiKey, { apiVersion: "2024-10-28.acacia" }) : null;
+const stripeTest = stripeTestApiKey ? new Stripe(stripeTestApiKey, { apiVersion: STRIPE_API_VERSION }) : null;
+const stripeLive = stripeLiveApiKey ? new Stripe(stripeLiveApiKey, { apiVersion: STRIPE_API_VERSION }) : null;
 
 // Subscription Detail Component
 const SubscriptionDetailBase = ({ subscription }: { subscription: Stripe.Subscription }) => {
@@ -145,7 +147,7 @@ function SubscriptionList({ customerId }: SubscriptionListProps = {}) {
     [customerId],
     {
       keepPreviousData: true,
-    }
+    },
   );
 
   const handleCancelSubscription = async (subscription: Stripe.Subscription) => {
@@ -187,10 +189,8 @@ function SubscriptionList({ customerId }: SubscriptionListProps = {}) {
         // Revalidate the list to remove the cancelled subscription
         revalidate();
       } catch (error) {
-        await showToast({
-          style: Toast.Style.Failure,
+        await showFailureToast(error, {
           title: "Failed to cancel subscription",
-          message: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }
@@ -250,10 +250,8 @@ function SubscriptionList({ customerId }: SubscriptionListProps = {}) {
           message: `${currency} ${convertAmount(amount)} refunded`,
         });
       } catch (error) {
-        await showToast({
-          style: Toast.Style.Failure,
+        await showFailureToast(error, {
           title: "Failed to process refund",
-          message: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }
@@ -285,20 +283,20 @@ function SubscriptionList({ customerId }: SubscriptionListProps = {}) {
                     subscription.status === "active"
                       ? Color.Green
                       : subscription.status === "canceled"
-                      ? Color.Red
-                      : subscription.status === "past_due"
-                      ? Color.Orange
-                      : subscription.status === "unpaid"
-                      ? Color.Red
-                      : subscription.status === "incomplete"
-                      ? Color.Yellow
-                      : subscription.status === "incomplete_expired"
-                      ? Color.Red
-                      : subscription.status === "trialing"
-                      ? Color.Blue
-                      : subscription.status === "paused"
-                      ? Color.SecondaryText
-                      : Color.SecondaryText,
+                        ? Color.Red
+                        : subscription.status === "past_due"
+                          ? Color.Orange
+                          : subscription.status === "unpaid"
+                            ? Color.Red
+                            : subscription.status === "incomplete"
+                              ? Color.Yellow
+                              : subscription.status === "incomplete_expired"
+                                ? Color.Red
+                                : subscription.status === "trialing"
+                                  ? Color.Blue
+                                  : subscription.status === "paused"
+                                    ? Color.SecondaryText
+                                    : Color.SecondaryText,
                 },
               },
             ]}
@@ -347,4 +345,4 @@ function SubscriptionList({ customerId }: SubscriptionListProps = {}) {
   );
 }
 
-export default withEnvContext(SubscriptionList);
+export default withEnvContext(SubscriptionList) as React.FC<SubscriptionListProps>;
