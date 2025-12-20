@@ -6,7 +6,6 @@
 - Show green "Open" tag for projects currently open in Zed
 - Reorder list when opening a project to show it at the top
 
-## [Fixes] - {PR_MERGE_DATE}
 ## [Update] - 2025-11-03
 
 Update to @raycast/api 1.103, fix types, and add tests to Zed db schema v30.
