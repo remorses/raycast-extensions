@@ -9,6 +9,7 @@ export interface Entry {
   title: string;
   subtitle: string;
   type: ZedWorkspaceType;
+  isOpen?: boolean;
 }
 
 export function getEntry(workspace: Workspace): Entry | null {
@@ -24,6 +25,7 @@ export function getEntry(workspace: Workspace): Entry | null {
       uri: workspace.uri,
       title,
       subtitle,
+      isOpen: workspace.isOpen,
     };
   } catch {
     return null;

@@ -6,7 +6,7 @@ import { showFailureToast } from "@raycast/utils";
 import { showGitBranch } from "../lib/preferences";
 import ColorHash from "color-hash";
 
-const colorHash = new ColorHash({ saturation: 0.7, lightness: 0.7 });
+const colorHash = new ColorHash({ saturation: 0.7, lightness: 0.6 });
 
 export interface EntryItemProps extends Pick<List.Item.Props, "icon" | "accessoryIcon" | "actions"> {
   entry: Entry;
@@ -38,7 +38,7 @@ function useGitBranch(path: string) {
 }
 
 export const EntryItem = ({ entry, ...props }: EntryItemProps) => {
-  const branch = entry.type === "local" && entry.path ? useGitBranch(entry.path) : undefined;
+  const branch = useGitBranch(entry.path);
 
   const accessories: List.Item.Accessory[] = [];
 
@@ -59,12 +59,9 @@ export const EntryItem = ({ entry, ...props }: EntryItemProps) => {
   return (
     <List.Item
       title={entry.title}
-      subtitle={{
-        value: entry.subtitle,
-        tooltip: entry.subtitle,
-      }}
+      subtitle={entry.subtitle}
       accessories={accessories}
-      icon={entry.type === "remote" ? "remote.svg" : { source: Icon.Dot, tintColor: colorHash.hex(entry.title) }}
+      icon={entry.is_remote ? "remote.svg" : { source: Icon.Dot, tintColor: colorHash.hex(entry.title) }}
       {...props}
     />
   );

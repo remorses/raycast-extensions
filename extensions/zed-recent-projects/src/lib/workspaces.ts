@@ -8,6 +8,8 @@ export interface ZedBaseWorkspace {
   timestamp: number;
   type: ZedWorkspaceType;
   paths: string;
+  window_id: number | null;
+  session_id: string | null;
 }
 
 export interface ZedLocalWorkspace extends ZedBaseWorkspace {
@@ -34,6 +36,7 @@ export interface Workspace {
   path: string;
   uri: string;
   host?: string;
+  isOpen?: boolean;
 }
 
 export function parseZedWorkspace(zedWorkspace: ZedWorkspace): Workspace | null {

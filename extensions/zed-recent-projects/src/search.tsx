@@ -1,14 +1,15 @@
-import { Action, ActionPanel, Icon, List } from "@raycast/api";
+import { Action, ActionPanel, Icon, List, open } from "@raycast/api";
 import { useZedContext, withZed } from "./components/with-zed";
 import { exists } from "./lib/utils";
 import { Entry, getEntry } from "./lib/entry";
 import { EntryItem } from "./components/entry-item";
 import { usePinnedEntries } from "./hooks/use-pinned-entries";
 import { useRecentWorkspaces } from "./hooks/use-recent-workspaces";
+import { Workspace } from "./lib/workspaces";
 
 export function Command() {
   const { app, dbPath, workspaceDbVersion } = useZedContext();
-  const { workspaces, isLoading, error, removeEntry, removeAllEntries } = useRecentWorkspaces(
+  const { workspaces, isLoading, error, removeEntry, removeAllEntries, revalidate } = useRecentWorkspaces(
     dbPath,
     workspaceDbVersion,
   );
@@ -19,6 +20,11 @@ export function Command() {
     .sort((a, b) => a.order - b.order);
 
   const zedIcon = { fileIcon: app.path };
+
+  const openEntry = async (workspace: Workspace) => {
+    await open(workspace.uri, app);
+    setTimeout(revalidate, 200);
+  };
 
   const removeAndUnpinEntry = async (entry: Pick<Entry, "id" | "uri">) => {
     await removeEntry(entry.id);
@@ -86,10 +92,10 @@ export function Command() {
 
       <List.Section title="Recent Projects">
         {Object.values(workspaces)
-          .filter((e) => !pinnedEntries[e.uri] && (!!e.host || exists(e.uri)))
+          .filter((e) => !pinnedEntries[e.uri] && (e.type === "remote" || exists(e.uri)))
           .sort((a, b) => (b.lastOpened || 0) - (a.lastOpened || 0))
-          .map((e) => {
-            const entry = getEntry(e);
+          .map((workspace) => {
+            const entry = getEntry(workspace);
 
             if (!entry) {
               return null;
@@ -101,7 +107,7 @@ export function Command() {
                 entry={entry}
                 actions={
                   <ActionPanel>
-                    <Action.Open title="Open in Zed" target={entry.uri} application={app} icon={zedIcon} />
+                    <Action title="Open in Zed" icon={zedIcon} onAction={() => openEntry(workspace)} />
                     {entry.type === "local" && <Action.ShowInFinder path={entry.path} />}
                     <Action
                       title="Pin Entry"
