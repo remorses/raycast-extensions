@@ -1,4 +1,5 @@
-import { Action, ActionPanel, Icon, List, open } from "@raycast/api";
+import { useState } from "react";
+import { Action, ActionPanel, Icon, List, open, showToast, Toast, getPreferenceValues } from "@raycast/api";
 import { useZedContext, withZed } from "./components/with-zed";
 import { exists } from "./lib/utils";
 import { Entry, getEntry } from "./lib/entry";
@@ -6,6 +7,12 @@ import { EntryItem } from "./components/entry-item";
 import { usePinnedEntries } from "./hooks/use-pinned-entries";
 import { useRecentWorkspaces } from "./hooks/use-recent-workspaces";
 import { Workspace } from "./lib/workspaces";
+import { closeZedWindow, getZedBundleId, ZedBuild } from "./lib/zed";
+import { platform } from "os";
+
+type FilterValue = "all" | "open" | "closed";
+
+const isMac = platform() === "darwin";
 
 export function Command() {
   const { app, dbPath, workspaceDbVersion } = useZedContext();
@@ -14,16 +21,46 @@ export function Command() {
     workspaceDbVersion,
   );
   const { pinnedEntries, pinEntry, unpinEntry, unpinAllEntries, moveUp, moveDown } = usePinnedEntries();
+  const [filter, setFilter] = useState<FilterValue>("all");
 
-  const pinned = Object.values(pinnedEntries)
-    .filter((e) => e.type === "remote" || exists(e.uri))
-    .sort((a, b) => a.order - b.order);
+  const filterByOpenState = <T extends { isOpen?: boolean }>(entries: T[]): T[] => {
+    if (filter === "open") return entries.filter((e) => e.isOpen);
+    if (filter === "closed") return entries.filter((e) => !e.isOpen);
+    return entries;
+  };
+
+  const pinned = filterByOpenState(
+    Object.values(pinnedEntries)
+      .filter((e) => e.type === "remote" || exists(e.uri))
+      .sort((a, b) => a.order - b.order)
+      .map((entry) => ({
+        ...entry,
+        isOpen: workspaces[entry.uri]?.isOpen ?? false,
+      })),
+  );
 
   const zedIcon = { fileIcon: app.path };
+  const preferences = getPreferenceValues<Preferences>();
+  const zedBuild = preferences.build as ZedBuild;
+  const bundleId = getZedBundleId(zedBuild);
 
   const openEntry = async (workspace: Workspace) => {
     await open(workspace.uri, app);
     setTimeout(revalidate, 200);
+  };
+
+  const closeEntry = async (entry: Entry) => {
+    const toast = await showToast({ style: Toast.Style.Animated, title: "Closing project..." });
+    const success = await closeZedWindow(entry.title, bundleId);
+    if (success) {
+      toast.style = Toast.Style.Success;
+      toast.title = "Project closed";
+      setTimeout(revalidate, 500);
+    } else {
+      toast.style = Toast.Style.Failure;
+      toast.title = "Failed to close project";
+      toast.message = "Window not found";
+    }
   };
 
   const removeAndUnpinEntry = async (entry: Pick<Entry, "id" | "uri">) => {
@@ -37,7 +74,16 @@ export function Command() {
   };
 
   return (
-    <List isLoading={isLoading}>
+    <List
+      isLoading={isLoading}
+      searchBarAccessory={
+        <List.Dropdown tooltip="Filter by status" value={filter} onChange={(value) => setFilter(value as FilterValue)}>
+          <List.Dropdown.Item title="All Windows" value="all" />
+          <List.Dropdown.Item title="Open Only" value="open" />
+          <List.Dropdown.Item title="Closed Only" value="closed" />
+        </List.Dropdown>
+      }
+    >
       <List.EmptyView
         title="No Recent Projects"
         description={error ? "Check that Zed is up-to-date" : undefined}
@@ -56,6 +102,14 @@ export function Command() {
               actions={
                 <ActionPanel>
                   <Action.Open title="Open in Zed" target={entry.uri} application={app} icon={zedIcon} />
+                  {isMac && entry.isOpen && (
+                    <Action
+                      title="Close Project"
+                      icon={Icon.XMarkCircle}
+                      onAction={() => closeEntry(entry)}
+                      shortcut={{ modifiers: ["cmd", "shift"], key: "w" }}
+                    />
+                  )}
                   {entry.type === "local" && <Action.ShowInFinder path={entry.path} />}
                   <Action
                     title="Unpin Entry"
@@ -91,39 +145,48 @@ export function Command() {
       </List.Section>
 
       <List.Section title="Recent Projects">
-        {Object.values(workspaces)
-          .filter((e) => !pinnedEntries[e.uri] && (e.type === "remote" || exists(e.uri)))
-          .sort((a, b) => (b.lastOpened || 0) - (a.lastOpened || 0))
-          .map((workspace) => {
-            const entry = getEntry(workspace);
+        {filterByOpenState(
+          Object.values(workspaces)
+            .filter((e) => !pinnedEntries[e.uri] && (e.type === "remote" || exists(e.uri)))
+            .sort((a, b) => (b.lastOpened || 0) - (a.lastOpened || 0)),
+        ).map((workspace) => {
+          const entry = getEntry(workspace);
 
-            if (!entry) {
-              return null;
-            }
+          if (!entry) {
+            return null;
+          }
 
-            return (
-              <EntryItem
-                key={entry.uri}
-                entry={entry}
-                actions={
-                  <ActionPanel>
-                    <Action title="Open in Zed" icon={zedIcon} onAction={() => openEntry(workspace)} />
-                    {entry.type === "local" && <Action.ShowInFinder path={entry.path} />}
+          return (
+            <EntryItem
+              key={entry.uri}
+              entry={entry}
+              actions={
+                <ActionPanel>
+                  <Action title="Open in Zed" icon={zedIcon} onAction={() => openEntry(workspace)} />
+                  {isMac && entry.isOpen && (
                     <Action
-                      title="Pin Entry"
-                      icon={Icon.Pin}
-                      onAction={() => pinEntry(entry)}
-                      shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
+                      title="Close Project"
+                      icon={Icon.XMarkCircle}
+                      onAction={() => closeEntry(entry)}
+                      shortcut={{ modifiers: ["cmd", "shift"], key: "w" }}
                     />
-                    <RemoveActionSection
-                      onRemoveEntry={() => removeAndUnpinEntry(entry)}
-                      onRemoveAllEntries={removeAllAndUnpinEntries}
-                    />
-                  </ActionPanel>
-                }
-              />
-            );
-          })}
+                  )}
+                  {entry.type === "local" && <Action.ShowInFinder path={entry.path} />}
+                  <Action
+                    title="Pin Entry"
+                    icon={Icon.Pin}
+                    onAction={() => pinEntry(entry)}
+                    shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
+                  />
+                  <RemoveActionSection
+                    onRemoveEntry={() => removeAndUnpinEntry(entry)}
+                    onRemoveAllEntries={removeAllAndUnpinEntries}
+                  />
+                </ActionPanel>
+              }
+            />
+          );
+        })}
       </List.Section>
     </List>
   );
