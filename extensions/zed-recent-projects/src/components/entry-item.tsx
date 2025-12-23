@@ -8,7 +8,7 @@ import ColorHash from "color-hash";
 
 const colorHash = new ColorHash({ saturation: 0.7, lightness: 0.7 });
 
-export interface EntryItemProps extends Pick<List.Item.Props, "icon" | "accessoryIcon" | "actions"> {
+export interface EntryItemProps extends Pick<List.Item.Props, "icon" | "accessoryIcon" | "actions" | "keywords"> {
   entry: Entry;
 }
 

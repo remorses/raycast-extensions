@@ -6,7 +6,7 @@
 - Show green "Open" tag for projects currently open in Zed
 - Reorder list when opening a project to show it at the top
 - Add "Close Project" action to close open Zed windows directly (macOS only)
-- Add filter dropdown to show all, open only, or closed only projects
+- Add "open" and "closed" keywords to filter projects by typing in the search bar
 
 ## [Update] - 2025-11-03
 

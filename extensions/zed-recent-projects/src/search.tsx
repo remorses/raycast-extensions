@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Action, ActionPanel, Icon, List, open, showToast, Toast, getPreferenceValues } from "@raycast/api";
 import { useZedContext, withZed } from "./components/with-zed";
 import { exists } from "./lib/utils";
@@ -10,8 +9,6 @@ import { Workspace } from "./lib/workspaces";
 import { closeZedWindow, getZedBundleId, ZedBuild } from "./lib/zed";
 import { platform } from "os";
 
-type FilterValue = "all" | "open" | "closed";
-
 const isMac = platform() === "darwin";
 
 export function Command() {
@@ -21,23 +18,14 @@ export function Command() {
     workspaceDbVersion,
   );
   const { pinnedEntries, pinEntry, unpinEntry, unpinAllEntries, moveUp, moveDown } = usePinnedEntries();
-  const [filter, setFilter] = useState<FilterValue>("all");
 
-  const filterByOpenState = <T extends { isOpen?: boolean }>(entries: T[]): T[] => {
-    if (filter === "open") return entries.filter((e) => e.isOpen);
-    if (filter === "closed") return entries.filter((e) => !e.isOpen);
-    return entries;
-  };
-
-  const pinned = filterByOpenState(
-    Object.values(pinnedEntries)
-      .filter((e) => e.type === "remote" || exists(e.uri))
-      .sort((a, b) => a.order - b.order)
-      .map((entry) => ({
-        ...entry,
-        isOpen: workspaces[entry.uri]?.isOpen ?? false,
-      })),
-  );
+  const pinned = Object.values(pinnedEntries)
+    .filter((e) => e.type === "remote" || exists(e.uri))
+    .sort((a, b) => a.order - b.order)
+    .map((entry) => ({
+      ...entry,
+      isOpen: workspaces[entry.uri]?.isOpen ?? false,
+    }));
 
   const zedIcon = { fileIcon: app.path };
   const preferences = getPreferenceValues<Preferences>();
@@ -74,16 +62,7 @@ export function Command() {
   };
 
   return (
-    <List
-      isLoading={isLoading}
-      searchBarAccessory={
-        <List.Dropdown tooltip="Filter by status" value={filter} onChange={(value) => setFilter(value as FilterValue)}>
-          <List.Dropdown.Item title="All Windows" value="all" />
-          <List.Dropdown.Item title="Open Only" value="open" />
-          <List.Dropdown.Item title="Closed Only" value="closed" />
-        </List.Dropdown>
-      }
-    >
+    <List isLoading={isLoading}>
       <List.EmptyView
         title="No Recent Projects"
         description={error ? "Check that Zed is up-to-date" : undefined}
@@ -99,6 +78,7 @@ export function Command() {
             <EntryItem
               key={entry.uri}
               entry={entry}
+              keywords={[entry.isOpen ? "open" : "closed"]}
               actions={
                 <ActionPanel>
                   <Action.Open title="Open in Zed" target={entry.uri} application={app} icon={zedIcon} />
@@ -145,48 +125,48 @@ export function Command() {
       </List.Section>
 
       <List.Section title="Recent Projects">
-        {filterByOpenState(
-          Object.values(workspaces)
-            .filter((e) => !pinnedEntries[e.uri] && (e.type === "remote" || exists(e.uri)))
-            .sort((a, b) => (b.lastOpened || 0) - (a.lastOpened || 0)),
-        ).map((workspace) => {
-          const entry = getEntry(workspace);
+        {Object.values(workspaces)
+          .filter((e) => !pinnedEntries[e.uri] && (e.type === "remote" || exists(e.uri)))
+          .sort((a, b) => (b.lastOpened || 0) - (a.lastOpened || 0))
+          .map((workspace) => {
+            const entry = getEntry(workspace);
 
-          if (!entry) {
-            return null;
-          }
+            if (!entry) {
+              return null;
+            }
 
-          return (
-            <EntryItem
-              key={entry.uri}
-              entry={entry}
-              actions={
-                <ActionPanel>
-                  <Action title="Open in Zed" icon={zedIcon} onAction={() => openEntry(workspace)} />
-                  {isMac && entry.isOpen && (
+            return (
+              <EntryItem
+                key={entry.uri}
+                entry={entry}
+                keywords={[entry.isOpen ? "open" : "closed"]}
+                actions={
+                  <ActionPanel>
+                    <Action title="Open in Zed" icon={zedIcon} onAction={() => openEntry(workspace)} />
+                    {isMac && entry.isOpen && (
+                      <Action
+                        title="Close Project"
+                        icon={Icon.XMarkCircle}
+                        onAction={() => closeEntry(entry)}
+                        shortcut={{ modifiers: ["cmd", "shift"], key: "w" }}
+                      />
+                    )}
+                    {entry.type === "local" && <Action.ShowInFinder path={entry.path} />}
                     <Action
-                      title="Close Project"
-                      icon={Icon.XMarkCircle}
-                      onAction={() => closeEntry(entry)}
-                      shortcut={{ modifiers: ["cmd", "shift"], key: "w" }}
+                      title="Pin Entry"
+                      icon={Icon.Pin}
+                      onAction={() => pinEntry(entry)}
+                      shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
                     />
-                  )}
-                  {entry.type === "local" && <Action.ShowInFinder path={entry.path} />}
-                  <Action
-                    title="Pin Entry"
-                    icon={Icon.Pin}
-                    onAction={() => pinEntry(entry)}
-                    shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
-                  />
-                  <RemoveActionSection
-                    onRemoveEntry={() => removeAndUnpinEntry(entry)}
-                    onRemoveAllEntries={removeAllAndUnpinEntries}
-                  />
-                </ActionPanel>
-              }
-            />
-          );
-        })}
+                    <RemoveActionSection
+                      onRemoveEntry={() => removeAndUnpinEntry(entry)}
+                      onRemoveAllEntries={removeAllAndUnpinEntries}
+                    />
+                  </ActionPanel>
+                }
+              />
+            );
+          })}
       </List.Section>
     </List>
   );
