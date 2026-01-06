@@ -4,6 +4,9 @@ import { execFile, execFileSync } from "child_process";
 
 export const execFilePromise = util.promisify(execFile);
 
+export const isWindows = process.platform === "win32";
+export const isMac = process.platform === "darwin";
+
 export function exists(p: string) {
   try {
     return existsSync(new URL(p));
