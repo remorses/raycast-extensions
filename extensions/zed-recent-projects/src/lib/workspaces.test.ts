@@ -15,7 +15,7 @@ describe("parseZedWorkspace", () => {
     ).toMatchSnapshot();
   });
 
-  it("skips local workspace with multiple paths", () => {
+  it("parse local workspace with multiple paths", () => {
     expect(
       parseZedWorkspace({
         id: 1,
@@ -93,7 +93,7 @@ describe("parseZedWorkspace", () => {
     ).toMatchSnapshot();
   });
 
-  it("skips remote workspace with multiple paths", () => {
+  it("parse remote workspace with multiple paths", () => {
     expect(
       parseZedWorkspace({
         id: 1,

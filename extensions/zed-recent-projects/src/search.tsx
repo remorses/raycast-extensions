@@ -6,7 +6,7 @@ import { EntryItem } from "./components/entry-item";
 import { usePinnedEntries } from "./hooks/use-pinned-entries";
 import { useRecentWorkspaces } from "./hooks/use-recent-workspaces";
 import { Workspace } from "./lib/workspaces";
-import { closeZedWindow, getZedBundleId, ZedBuild } from "./lib/zed";
+import { closeZedWindow, getZedBundleId, openMultiFolderInZed, ZedBuild } from "./lib/zed";
 import { platform } from "os";
 
 const isMac = platform() === "darwin";
@@ -81,7 +81,11 @@ export function Command() {
               keywords={[entry.isOpen ? "open" : "closed"]}
               actions={
                 <ActionPanel>
-                  <Action.Open title="Open in Zed" target={entry.uri} application={app} icon={zedIcon} />
+                  {entry.allPaths && entry.allPaths.length > 1 ? (
+                    <Action title="Open in Zed" icon={zedIcon} onAction={() => openMultiFolderInZed(entry, zedBuild)} />
+                  ) : (
+                    <Action.Open title="Open in Zed" target={entry.uri} application={app} icon={zedIcon} />
+                  )}
                   {isMac && entry.isOpen && (
                     <Action
                       title="Close Project"
@@ -142,7 +146,15 @@ export function Command() {
                 keywords={[entry.isOpen ? "open" : "closed"]}
                 actions={
                   <ActionPanel>
-                    <Action title="Open in Zed" icon={zedIcon} onAction={() => openEntry(workspace)} />
+                    {entry.allPaths && entry.allPaths.length > 1 ? (
+                      <Action
+                        title="Open in Zed"
+                        icon={zedIcon}
+                        onAction={() => openMultiFolderInZed(entry, zedBuild)}
+                      />
+                    ) : (
+                      <Action title="Open in Zed" icon={zedIcon} onAction={() => openEntry(workspace)} />
+                    )}
                     {isMac && entry.isOpen && (
                       <Action
                         title="Close Project"

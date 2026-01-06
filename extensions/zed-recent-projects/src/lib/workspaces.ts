@@ -37,6 +37,7 @@ export interface Workspace {
   uri: string;
   host?: string;
   isOpen?: boolean;
+  allPaths?: string[];
 }
 
 export function parseZedWorkspace(zedWorkspace: ZedWorkspace): Workspace | null {
@@ -49,21 +50,28 @@ export function parseZedWorkspace(zedWorkspace: ZedWorkspace): Workspace | null 
     .map((p) => p.trim())
     .filter((p) => p);
 
-  if (paths.length !== 1) {
+  if (paths.length === 0) {
     return null;
   }
 
+  // Use first path as primary path
   const path = paths[0];
 
   if (zedWorkspace.type === "local") {
     const processedPath = path.replace(/\/+$/, "");
-    return {
+    const workspace: Workspace = {
       id: zedWorkspace.id,
       lastOpened: zedWorkspace.timestamp,
       type: zedWorkspace.type,
       uri: "file://" + processedPath,
       path: processedPath,
     };
+
+    if (paths.length > 1) {
+      workspace.allPaths = paths;
+    }
+
+    return workspace;
   }
 
   if (zedWorkspace.type === "remote") {
@@ -72,7 +80,7 @@ export function parseZedWorkspace(zedWorkspace: ZedWorkspace): Workspace | null 
       zedWorkspace.port ? ":" + zedWorkspace.port : ""
     }/${processedPath}`;
 
-    return {
+    const workspace: Workspace = {
       id: zedWorkspace.id,
       lastOpened: zedWorkspace.timestamp,
       type: zedWorkspace.type,
@@ -80,6 +88,12 @@ export function parseZedWorkspace(zedWorkspace: ZedWorkspace): Workspace | null 
       path: processedPath,
       host: zedWorkspace.host,
     };
+
+    if (paths.length > 1) {
+      workspace.allPaths = paths.map((p) => p.replace(/^\/+/, "").replace(/\/+$/, ""));
+    }
+
+    return workspace;
   }
 
   return null;
