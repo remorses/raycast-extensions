@@ -23,7 +23,14 @@ export interface ZedRemoteWorkspace extends ZedBaseWorkspace {
   port: number | null;
 }
 
-export type ZedWorkspace = ZedLocalWorkspace | ZedRemoteWorkspace;
+export interface ZedWorkspaceWithWsl extends ZedRemoteWorkspace {
+  type: "remote";
+  kind: string;
+  distro: string | null;
+  user: string | null;
+}
+
+export type ZedWorkspace = ZedLocalWorkspace | ZedRemoteWorkspace | ZedWorkspaceWithWsl;
 
 //
 // Unified types for extension
@@ -38,6 +45,7 @@ export interface Workspace {
   host?: string;
   isOpen?: boolean;
   allPaths?: string[];
+  wsl?: { user: string | null; distro: string | null } | null;
 }
 
 export function parseZedWorkspace(zedWorkspace: ZedWorkspace): Workspace | null {
@@ -80,6 +88,9 @@ export function parseZedWorkspace(zedWorkspace: ZedWorkspace): Workspace | null 
       zedWorkspace.port ? ":" + zedWorkspace.port : ""
     }/${processedPath}`;
 
+    const hasWsl = "kind" in zedWorkspace && zedWorkspace.kind === "wsl" && zedWorkspace.user && zedWorkspace.distro;
+    const wsl = hasWsl ? { user: zedWorkspace.user, distro: zedWorkspace.distro } : null;
+
     const workspace: Workspace = {
       id: zedWorkspace.id,
       lastOpened: zedWorkspace.timestamp,
@@ -89,6 +100,7 @@ export function parseZedWorkspace(zedWorkspace: ZedWorkspace): Workspace | null 
       host: zedWorkspace.host,
     };
 
+    if (hasWsl) workspace.wsl = wsl;
     if (paths.length > 1) {
       workspace.allPaths = paths.map((p) => p.replace(/^\/+/, "").replace(/\/+$/, ""));
     }
