@@ -30,7 +30,6 @@ export function Command() {
       isOpen: workspaces[entry.uri]?.isOpen ?? false,
     }));
 
-  const zedIcon = { fileIcon: app.path };
   const preferences = getPreferenceValues<Preferences>();
   const zedBuild = preferences.build as ZedBuild;
   const bundleId = getZedBundleId(zedBuild);
@@ -150,7 +149,12 @@ export function Command() {
                 keywords={[entry.isOpen ? "open" : "closed"]}
                 actions={
                   <ActionPanel>
-                    <OpenInZedAction entry={entry} allPaths={entry.allPaths} zedBuild={zedBuild} onOpen={() => openEntry(workspace)} />
+                    <OpenInZedAction
+                      entry={entry}
+                      allPaths={entry.allPaths}
+                      zedBuild={zedBuild}
+                      onOpen={() => openEntry(workspace)}
+                    />
                     {isMac && entry.isOpen && (
                       <Action
                         title="Close Project"
@@ -185,23 +189,33 @@ export function Command() {
   );
 }
 
-function OpenInZedAction({ entry, allPaths, zedBuild, onOpen }: { entry: Entry; allPaths?: string[]; zedBuild: ZedBuild; onOpen?: () => void }) {
+function OpenInZedAction({
+  entry,
+  allPaths,
+  zedBuild,
+  onOpen,
+}: {
+  entry: Entry;
+  allPaths?: string[];
+  zedBuild: ZedBuild;
+  onOpen?: () => void;
+}) {
   const { app } = useZedContext();
   const zedIcon = { fileIcon: app.path };
   const openZedInWsl = () => execWindowsZed(["--wsl", `${entry.wsl?.user}@${entry.wsl?.distro}`, `/${entry.path}`]);
-  
+
   if (entry.wsl) {
     return <Action title="Open in Zed" onAction={openZedInWsl} icon={zedIcon} />;
   }
-  
+
   if (allPaths && allPaths.length > 1) {
     return <Action title="Open in Zed" icon={zedIcon} onAction={() => openMultiFolderInZed(entry, zedBuild)} />;
   }
-  
+
   if (onOpen) {
     return <Action title="Open in Zed" icon={zedIcon} onAction={onOpen} />;
   }
-  
+
   return <Action.Open title="Open in Zed" target={entry.uri} application={app} icon={zedIcon} />;
 }
 
