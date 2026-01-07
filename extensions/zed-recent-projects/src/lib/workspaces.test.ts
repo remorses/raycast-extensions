@@ -134,6 +134,8 @@ describe("parseZedWorkspace", () => {
         paths: "/home/wsluser/project",
         kind: "wsl",
         distro: "Ubuntu",
+        window_id: null,
+        session_id: null,
       }),
     ).toMatchSnapshot();
   });
@@ -150,6 +152,8 @@ describe("parseZedWorkspace", () => {
         paths: "/home/wsluser/project",
         kind: "wsl",
         distro: "Debian",
+        window_id: null,
+        session_id: null,
       }),
     ).toMatchSnapshot();
   });
@@ -166,6 +170,8 @@ describe("parseZedWorkspace", () => {
         paths: "/home/wsluser/project",
         kind: "wsl",
         distro: null,
+        window_id: null,
+        session_id: null,
       }),
     ).toMatchSnapshot();
   });
@@ -182,6 +188,8 @@ describe("parseZedWorkspace", () => {
         paths: "/home/wsluser/project",
         kind: "wsl",
         distro: "Ubuntu",
+        window_id: null,
+        session_id: null,
       }),
     ).toMatchSnapshot();
   });
