@@ -53,6 +53,7 @@ export default async function openWithZed() {
 
     const app = await getZedApp();
     for (const { path } of selectedItems) {
+      // on windows it just opens the first item, it is a raycast issue
       await open(encodeURI(path), app);
     }
 

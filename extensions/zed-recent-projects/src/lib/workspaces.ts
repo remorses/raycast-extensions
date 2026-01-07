@@ -90,7 +90,6 @@ export function parseZedWorkspace(zedWorkspace: ZedWorkspace): Workspace | null 
 
     const hasWsl = "kind" in zedWorkspace && zedWorkspace.kind === "wsl" && zedWorkspace.user && zedWorkspace.distro;
     const wsl = hasWsl ? { user: zedWorkspace.user, distro: zedWorkspace.distro } : null;
-
     const workspace: Workspace = {
       id: zedWorkspace.id,
       lastOpened: zedWorkspace.timestamp,

@@ -82,22 +82,16 @@ export async function openMultiFolderInZed(entry: Entry, build: ZedBuild): Promi
   const paths = entry.allPaths.map((p) => `"${p}"`).join(" ");
 
   try {
-    // Try to execute Zed CLI command in background
     await execAsync(`command -v ${cli} > /dev/null 2>&1`);
     execAsync(`${cli} ${paths} > /dev/null 2>&1 &`);
-
-    // Clear navigation stack and close Raycast window immediately
     await popToRoot();
     await closeMainWindow();
   } catch {
-    // CLI not found - show error and fall back to opening first folder
     await showToast({
       style: Toast.Style.Failure,
       title: "Zed CLI not found",
       message: "Opening first folder only. Install CLI via Zed > Install CLI",
     });
-
-    // Fall back to opening first folder with native method
     const bundleId = getZedBundleId(build);
     await open(entry.uri, bundleId);
     await popToRoot();
@@ -111,10 +105,6 @@ const ZedProcessNameMapping: Record<ZedBundleId, string> = {
   "dev.zed.Zed-Dev": "Zed Dev",
 };
 
-/**
- * Closes a Zed window by its title (project name).
- * Uses System Events to click the window's close button directly.
- */
 export async function closeZedWindow(windowTitle: string, bundleId: ZedBundleId): Promise<boolean> {
   const processName = ZedProcessNameMapping[bundleId];
   const escapedTitle = windowTitle.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
